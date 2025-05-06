@@ -1,0 +1,42 @@
+{
+  "name": "glory-star-calculator",
+  "version": "1.0.0",
+  "description": "Calculadora de tempo de corte para arquivos SVG da máquina GloryStar_GS3015",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "prepare": "npm run build",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "keywords": [
+    "laser",
+    "corte",
+    "tempo",
+    "calculator",
+    "svg",
+    "glorystar",
+    "gs3015"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@svgdotjs/svg.js": "^3.2.4",
+    "@types/node": "^22.15.12",
+    "svg-parser": "^2.0.4",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/svg-parser": "^2.0.6",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.2",
+    "ts-node": "^10.9.2"
+  }
+}
