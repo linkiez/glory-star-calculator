@@ -1,6 +1,6 @@
 {
   "name": "@linkiez/glory-star-calculator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Calculadora de tempo de corte para arquivos SVG da máquina GloryStar_GS3015",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
