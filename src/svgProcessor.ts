@@ -1,24 +1,10 @@
 import { parse } from 'svg-parser';
-import { readFileSync } from 'fs';
 import { 
   Point, 
   Movement, 
   ProcessedSVGElement, 
   SVGElementType 
 } from './types';
-
-/**
- * Carrega um arquivo SVG a partir de um caminho
- * @param filePath Caminho para o arquivo SVG
- * @returns String com conteúdo do SVG
- */
-export function loadSvgFile(filePath: string): string {
-  try {
-    return readFileSync(filePath, 'utf-8');
-  } catch (error) {
-    throw new Error(`Erro ao carregar o arquivo SVG: ${error}`);
-  }
-}
 
 /**
  * Processa uma string SVG e extrai os elementos

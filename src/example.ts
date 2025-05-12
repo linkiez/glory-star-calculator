@@ -7,37 +7,31 @@
 
 import * as path from 'path';
 import { 
-  calculateCuttingTimeFromFile, 
   calculateCuttingTimeFromSvg,
   CuttingTimeOptions,
-  CuttingTimeResult,
-  loadSvgFile
+  CuttingTimeResult
 } from './index';
 
-// Exemplo de uso com um arquivo SVG
-function exampleWithSvgFile(svgFilePath: string, materialThickness: number): void {
-  try {
-    console.log(`\nCalculando tempo de corte para arquivo: ${path.basename(svgFilePath)}`);
-    console.log(`Espessura do material: ${materialThickness}mm`);
-    
-    // Configurações para o cálculo
-    const options: CuttingTimeOptions = {
-      materialThickness,
-      optimize: true, // Otimiza o caminho de corte
-      piercingType: 'normal',
-      leadIn: 2.0, // mm
-      leadOut: 1.5 // mm
-    };
-    
-    // Calcula o tempo de corte a partir do arquivo
-    const result = calculateCuttingTimeFromFile(svgFilePath, options);
-    
-    // Exibe os resultados
-    displayResults(result);
-  } catch (error) {
-    console.error(`Erro ao processar arquivo: ${error}`);
-  }
-}
+// Exemplo universal (browser e Node.js)
+const svgString = `
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  <rect x="10" y="10" width="80" height="80" fill="none" stroke="black" />
+</svg>
+`;
+
+const result = calculateCuttingTimeFromSvg(svgString, {
+  materialThickness: 5.0,
+  optimize: true
+});
+
+console.log('Tempo total de corte:', result.totalTimeSec, 'segundos');
+console.log('Distância de corte:', result.cuttingDistance, 'mm');
+
+// Exemplo Node.js (apenas para ambiente Node)
+// Descomente para testar em Node.js
+// import { calculateCuttingTimeFromFile, loadSvgFile } from './node';
+// const fileResult = calculateCuttingTimeFromFile('/caminho/para/arquivo.svg', { materialThickness: 3.0 });
+// console.log('Tempo total para arquivo:', fileResult.totalTimeSec, 'segundos');
 
 // Exemplo de uso com string SVG
 function exampleWithSvgString(svgString: string, materialThickness: number): void {
@@ -106,7 +100,3 @@ console.log('=== EXEMPLOS DE CÁLCULO DE TEMPO DE CORTE ===');
 [1.0, 3.0, 5.0, 10.0, 15.0].forEach(thickness => {
   exampleWithSvgString(simpleSvg, thickness);
 });
-
-// Exemplo com arquivo SVG (descomente e ajuste o caminho conforme necessário)
-// const svgFilePath = path.resolve(__dirname, '../examples/sample.svg');
-// exampleWithSvgFile(svgFilePath, 5.0);

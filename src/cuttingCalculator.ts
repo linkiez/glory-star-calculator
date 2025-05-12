@@ -8,7 +8,7 @@ import {
   RAPID_SPEED,
   SETUP_TIME
 } from './constants';
-import { convertElementsToMovements, loadSvgFile, processSvg } from './svgProcessor';
+import { convertElementsToMovements, processSvg } from './svgProcessor';
 import {
   CuttingTimeOptions,
   CuttingTimeResult,
@@ -386,18 +386,4 @@ export function calculateCuttingTimeFromSvg(
   
   // Calcula o tempo de corte
   return calculateCuttingTime(movements, options);
-}
-
-/**
- * Função para calcular o tempo de corte a partir do caminho de um arquivo SVG
- */
-export function calculateCuttingTimeFromFile(
-  filePath: string,
-  options: CuttingTimeOptions
-): CuttingTimeResult {
-  // Carrega o arquivo SVG
-  const svgContent = loadSvgFile(filePath);
-  
-  // Calcula o tempo usando o conteúdo do arquivo
-  return calculateCuttingTimeFromSvg(svgContent, options);
 }
