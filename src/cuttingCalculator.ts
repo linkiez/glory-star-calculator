@@ -1,21 +1,20 @@
 import {
-  Movement,
-  CuttingTimeResult,
-  CuttingTimeOptions,
-  ProcessedSVGElement,
-  Point
-} from './types';
-import {
+  ACCELERATION_TIME,
   CUTTING_SPEEDS,
+  MAX_DISTANCE_FOR_HEAD_DOWN,
+  MAX_DISTANCE_FOR_JUMP,
+  MIN_DISTANCE_FOR_ACCELERATION,
   PIERCE_TIMES,
   RAPID_SPEED,
-  ACCELERATION_TIME,
-  MIN_DISTANCE_FOR_ACCELERATION,
-  SETUP_TIME,
-  MAX_DISTANCE_FOR_HEAD_DOWN,
-  MAX_DISTANCE_FOR_JUMP
+  SETUP_TIME
 } from './constants';
-import { processSvg, loadSvgFile, convertElementsToMovements } from './svgProcessor';
+import { convertElementsToMovements, loadSvgFile, processSvg } from './svgProcessor';
+import {
+  CuttingTimeOptions,
+  CuttingTimeResult,
+  Movement,
+  Point
+} from './types';
 
 /**
  * Calcula a distância euclidiana entre dois pontos
@@ -49,10 +48,17 @@ export function getCuttingSpeed(thickness: number): number {
     return CUTTING_SPEEDS[thicknesses[thicknesses.length - 1]];
   }
   
-  // Encontrar a espessura disponível imediatamente superior (arredondar para cima)
+  // Interpolação linear entre os valores mais próximos
   for (let i = 0; i < thicknesses.length - 1; i++) {
     if (thickness > thicknesses[i] && thickness < thicknesses[i + 1]) {
-      return CUTTING_SPEEDS[thicknesses[i + 1]];
+      const lowerThickness = thicknesses[i];
+      const upperThickness = thicknesses[i + 1];
+      const lowerSpeed = CUTTING_SPEEDS[lowerThickness];
+      const upperSpeed = CUTTING_SPEEDS[upperThickness];
+      
+      // Cálculo da interpolação linear
+      const ratio = (thickness - lowerThickness) / (upperThickness - lowerThickness);
+      return lowerSpeed - ratio * (lowerSpeed - upperSpeed);
     }
   }
   
@@ -84,10 +90,17 @@ export function getPierceTime(thickness: number): number {
     return PIERCE_TIMES[thicknesses[thicknesses.length - 1]];
   }
   
-  // Encontrar a espessura disponível imediatamente superior (arredondar para cima)
+  // Interpolação linear entre os valores mais próximos
   for (let i = 0; i < thicknesses.length - 1; i++) {
     if (thickness > thicknesses[i] && thickness < thicknesses[i + 1]) {
-      return PIERCE_TIMES[thicknesses[i + 1]];
+      const lowerThickness = thicknesses[i];
+      const upperThickness = thicknesses[i + 1];
+      const lowerTime = PIERCE_TIMES[lowerThickness];
+      const upperTime = PIERCE_TIMES[upperThickness];
+      
+      // Cálculo da interpolação linear
+      const ratio = (thickness - lowerThickness) / (upperThickness - lowerThickness);
+      return lowerTime + ratio * (upperTime - lowerTime);
     }
   }
   

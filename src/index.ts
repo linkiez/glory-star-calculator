@@ -14,7 +14,6 @@ export * from './constants';
 // Exporta as funções principais de cálculo de tempo de corte
 import { 
   calculateCuttingTimeFromSvg,
-  calculateCuttingTimeFromFile,
   calculateCuttingTime,
   getCuttingSpeed,
   getPierceTime,
@@ -23,7 +22,6 @@ import {
 
 export {
   calculateCuttingTimeFromSvg,
-  calculateCuttingTimeFromFile,
   calculateCuttingTime,
   getCuttingSpeed,
   getPierceTime,
@@ -32,13 +30,11 @@ export {
 
 // Exporta funções de processamento de SVG que podem ser úteis
 import {
-  loadSvgFile,
   processSvg,
   convertElementsToMovements
 } from './svgProcessor';
 
 export {
-  loadSvgFile,
   processSvg,
   convertElementsToMovements
 };

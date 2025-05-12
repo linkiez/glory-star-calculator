@@ -5,7 +5,7 @@ Biblioteca em TypeScript para calcular o tempo de corte a partir de arquivos SVG
 ## Instalação
 
 ```bash
-npm install glory-star-calculator
+npm install @linkiez/glory-star-calculator
 ```
 
 ## Recursos
@@ -23,7 +23,7 @@ npm install glory-star-calculator
 ## Uso Básico
 
 ```typescript
-import { calculateCuttingTimeFromSvg, calculateCuttingTimeFromFile } from 'glory-star-calculator';
+import { calculateCuttingTimeFromSvg } from '@linkiez/glory-star-calculator';
 
 // Cálculo a partir de string SVG
 const svgString = `
@@ -39,8 +39,15 @@ const result = calculateCuttingTimeFromSvg(svgString, {
 
 console.log(`Tempo total de corte: ${result.totalTimeSec} segundos`);
 console.log(`Distância de corte: ${result.cuttingDistance} mm`);
+```
 
-// Cálculo a partir de arquivo SVG
+### Node.js: cálculo a partir de arquivo SVG
+
+Se você estiver usando Node.js, pode importar a função específica:
+
+```typescript
+import { calculateCuttingTimeFromFile } from '@linkiez/glory-star-calculator/dist/node';
+
 const fileResult = calculateCuttingTimeFromFile('/caminho/para/arquivo.svg', {
   materialThickness: 3.0
 });
