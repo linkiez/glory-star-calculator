@@ -55,4 +55,5 @@ export interface CuttingTimeOptions {
   leadOut?: number;
   piercingType?: 'normal' | 'flying';
   optimize?: boolean;
+  scaleFactor?: number; // Fator de escala para ajustar distâncias
 }

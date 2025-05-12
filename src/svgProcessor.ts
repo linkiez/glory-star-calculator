@@ -1,9 +1,9 @@
 import { parse } from 'svg-parser';
-import { 
-  Point, 
-  Movement, 
-  ProcessedSVGElement, 
-  SVGElementType 
+import {
+  Movement,
+  Point,
+  ProcessedSVGElement,
+  SVGElementType
 } from './types';
 
 /**

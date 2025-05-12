@@ -318,6 +318,8 @@ export function calculateCuttingTime(
     return result;
   }
   
+  const scale = options.scaleFactor ?? 1;
+  
   // Otimiza os movimentos se a opção estiver habilitada
   const processedMovements = options.optimize ? 
     optimizeMovements(movements) : movements;
@@ -333,7 +335,9 @@ export function calculateCuttingTime(
   
   // Processa cada movimento
   processedMovements.forEach(movement => {
-    const { time, distance, isCutting } = calculateTimeForMovement(movement, cuttingSpeed);
+    let { time, distance, isCutting } = calculateTimeForMovement(movement, cuttingSpeed);
+    distance *= scale;
+    time *= scale;
     
     // Acumula distâncias
     result.totalDistance += distance;
