@@ -17,12 +17,13 @@ import {
   calculateCuttingTimeFromSvg,
   calculateDistance,
   getCuttingSpeed,
-  getPierceTime
+  getPierceTime,
+  calculateCuttingTimeFromDxf
 } from './cuttingCalculator';
 
 export {
   calculateCuttingTime, calculateCuttingTimeFromSvg, calculateDistance, getCuttingSpeed,
-  getPierceTime
+  getPierceTime, calculateCuttingTimeFromDxf
 };
 
 // Exporta funções de processamento de SVG que podem ser úteis
