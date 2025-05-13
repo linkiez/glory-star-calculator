@@ -33,6 +33,7 @@
   "dependencies": {
     "@svgdotjs/svg.js": "^3.2.4",
     "@types/node": "^22.15.12",
+    "dxf-parser": "^1.1.2",
     "svg-parser": "^2.0.4",
     "typescript": "^5.8.3"
   },

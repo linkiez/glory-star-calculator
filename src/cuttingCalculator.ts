@@ -1,3 +1,4 @@
+import DxfParser from 'dxf-parser';
 import {
   ACCELERATION_TIME,
   CUTTING_SPEEDS,
@@ -389,5 +390,88 @@ export function calculateCuttingTimeFromSvg(
   const movements = convertElementsToMovements(elements);
   
   // Calcula o tempo de corte
+  return calculateCuttingTime(movements, options);
+}
+
+/**
+ * Função principal que calcula o tempo de corte a partir de um arquivo DXF
+ */
+export function calculateCuttingTimeFromDxf(dxfString: string, options: CuttingTimeOptions): CuttingTimeResult {
+  const parser = new DxfParser();
+  let dxf: any;
+  try {
+    dxf = parser.parseSync(dxfString);
+  } catch (e) {
+    throw new Error('Erro ao fazer o parse do DXF: ' + e);
+  }
+  const movements: Movement[] = [];
+  if (!dxf || !dxf.entities) return calculateCuttingTime([], options);
+  for (const entity of dxf.entities) {
+    if (entity.type === 'LINE') {
+      movements.push({
+        start: { x: entity.x1, y: entity.y1 },
+        end: { x: entity.x2, y: entity.y2 },
+        isCutting: true
+      });
+    }
+    if (entity.type === 'CIRCLE') {
+      const circle = entity as any;
+      const steps = 32;
+      const points: Point[] = [];
+      for (let i = 0; i < steps; i++) {
+        const angle = (2 * Math.PI * i) / steps;
+        points.push({
+          x: circle.center.x + circle.radius * Math.cos(angle),
+          y: circle.center.y + circle.radius * Math.sin(angle)
+        });
+      }
+      for (let i = 0; i < steps; i++) {
+        movements.push({
+          start: points[i],
+          end: points[(i + 1) % steps],
+          isCutting: true
+        });
+      }
+    }
+    if (entity.type === 'ARC') {
+      const arc = entity as any;
+      const steps = 24;
+      const startAngle = (arc.startAngle * Math.PI) / 180;
+      const endAngle = (arc.endAngle * Math.PI) / 180;
+      const sweep = endAngle > startAngle ? endAngle - startAngle : 2 * Math.PI - (startAngle - endAngle);
+      for (let i = 0; i < steps; i++) {
+        const a1 = startAngle + (sweep * i) / steps;
+        const a2 = startAngle + (sweep * (i + 1)) / steps;
+        movements.push({
+          start: {
+            x: arc.center.x + arc.radius * Math.cos(a1),
+            y: arc.center.y + arc.radius * Math.sin(a1)
+          },
+          end: {
+            x: arc.center.x + arc.radius * Math.cos(a2),
+            y: arc.center.y + arc.radius * Math.sin(a2)
+          },
+          isCutting: true
+        });
+      }
+    }
+    if (entity.type === 'LWPOLYLINE' || entity.type === 'POLYLINE') {
+      const poly = entity as any;
+      for (let i = 0; i < poly.vertices.length - 1; i++) {
+        movements.push({
+          start: { x: poly.vertices[i].x, y: poly.vertices[i].y },
+          end: { x: poly.vertices[i + 1].x, y: poly.vertices[i + 1].y },
+          isCutting: true
+        });
+      }
+      if (poly.closed) {
+        movements.push({
+          start: { x: poly.vertices[poly.vertices.length - 1].x, y: poly.vertices[poly.vertices.length - 1].y },
+          end: { x: poly.vertices[0].x, y: poly.vertices[0].y },
+          isCutting: true
+        });
+      }
+    }
+  }
   return calculateCuttingTime(movements, options);
 }

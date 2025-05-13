@@ -6,10 +6,11 @@
  */
 
 import {
-  calculateCuttingTimeFromSvg,
-  CuttingTimeOptions,
-  CuttingTimeResult
+    calculateCuttingTimeFromSvg,
+    CuttingTimeOptions,
+    CuttingTimeResult
 } from './index';
+import { calculateCuttingTimeFromDxf } from './cuttingCalculator';
 
 // Exemplo universal (browser e Node.js)
 const svgString = `
@@ -137,6 +138,14 @@ function testWithScaleFactor(svg: string, thickness: number, targetSeconds: numb
 }
 
 testWithScaleFactor(svgUsuario, 6.35, 53);
+
+// Exemplo de string DXF simples (linha e círculo)
+const dxfString = `0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n100\n21\n0\n0\nCIRCLE\n8\n0\n10\n50\n20\n50\n40\n25\n0\nENDSEC\n0\nEOF\n`;
+
+console.log('\n=== TESTE COM DXF (linha e círculo) ===');
+const dxfResult = calculateCuttingTimeFromDxf(dxfString, { materialThickness: 3, optimize: true });
+console.log('Tempo total DXF:', dxfResult.totalTimeSec, 'segundos');
+console.log('Distância de corte DXF:', dxfResult.cuttingDistance, 'mm');
 
 // Execute os exemplos com diferentes espessuras
 console.log('=== EXEMPLOS DE CÁLCULO DE TEMPO DE CORTE ===');
