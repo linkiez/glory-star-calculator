@@ -1,11 +1,11 @@
 import {
+  calculateCuttingTime,
+  calculateCuttingTimeFromSvg,
   calculateDistance,
   getCuttingSpeed,
-  getPierceTime,
-  calculateCuttingTimeFromSvg,
-  calculateCuttingTime
+  getPierceTime
 } from '../../src/cuttingCalculator';
-import { Movement, Point, CuttingTimeOptions } from '../../src/types';
+import { CuttingTimeOptions, Movement, Point } from '../../src/types';
 
 describe('GloryStar Cutting Calculator', () => {
   // Teste para cálculo de distância
@@ -25,19 +25,19 @@ describe('GloryStar Cutting Calculator', () => {
   // Teste para função de obtenção de velocidade de corte
   describe('getCuttingSpeed', () => {
     it('deve retornar a velocidade correta para espessuras na tabela', () => {
-      expect(getCuttingSpeed(1.0)).toBe(7000);
+      expect(getCuttingSpeed(1.0)).toBeCloseTo(6133.33, 1); // valor interpolado
       expect(getCuttingSpeed(5.0)).toBe(2200);
-      expect(getCuttingSpeed(10.0)).toBe(1100);
+      expect(getCuttingSpeed(10.0)).toBeCloseTo(1059.69, 1); // valor interpolado entre 9.5 e 12.7
     });
 
     it('deve interpolar velocidades para espessuras intermediárias', () => {
-      // Interpolar entre 1.0mm (7000mm/min) e 1.5mm (6000mm/min)
-      const speed1_25 = getCuttingSpeed(1.25);
-      expect(speed1_25).toBeGreaterThan(6000);
-      expect(speed1_25).toBeLessThan(7000);
+      // Interpolar entre 0.9mm (6200mm/min) e 1.2mm (6000mm/min)
+      const speed1_1 = getCuttingSpeed(1.1);
+      expect(speed1_1).toBeGreaterThan(6000);
+      expect(speed1_1).toBeLessThan(6200);
 
       // Verificar se a interpolação está próxima do valor esperado
-      expect(Math.abs(speed1_25 - 6500)).toBeLessThan(100);
+      expect(Math.abs(speed1_1 - 6100)).toBeLessThan(100);
     });
 
     it('deve lidar com espessuras fora do intervalo definido', () => {
@@ -52,19 +52,19 @@ describe('GloryStar Cutting Calculator', () => {
   // Teste para função de obtenção de tempo de perfuração
   describe('getPierceTime', () => {
     it('deve retornar o tempo correto para espessuras na tabela', () => {
-      expect(getPierceTime(1.0)).toBe(0.3);
-      expect(getPierceTime(5.0)).toBe(1.1);
-      expect(getPierceTime(15.0)).toBe(3.5);
+      expect(getPierceTime(1.0)).toBeCloseTo(0.1667, 3); // valor interpolado
+      expect(getPierceTime(5.0)).toBe(0.4);
+      expect(getPierceTime(12.7)).toBe(1.6);
     });
 
     it('deve interpolar tempos para espessuras intermediárias', () => {
-      // Interpolar entre 5.0mm (1.1s) e 6.0mm (1.3s)
-      const time5_5 = getPierceTime(5.5);
-      expect(time5_5).toBeGreaterThan(1.1);
-      expect(time5_5).toBeLessThan(1.3);
+      // Interpolar entre 1.2mm (0.3s) e 1.5mm (0.4s)
+      const time1_3 = getPierceTime(1.3);
+      expect(time1_3).toBeGreaterThan(0.3);
+      expect(time1_3).toBeLessThan(0.4);
       
       // Verificar interpolação
-      expect(Math.abs(time5_5 - 1.2)).toBeLessThan(0.05);
+      expect(Math.abs(time1_3 - 0.35)).toBeLessThan(0.05);
     });
   });
 
