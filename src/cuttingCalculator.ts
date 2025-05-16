@@ -321,6 +321,16 @@ export function calculateCuttingTime(
   
   const scale = options.scaleFactor ?? 1;
   
+  // Determina o kerf a ser usado
+  let kerf = options.kerf;
+  if (kerf === undefined || kerf === null) {
+    // Busca kerf padrão para a espessura
+    // @ts-ignore
+    const { KERF_DISTANCE } = require('./constants');
+    kerf = KERF_DISTANCE[options.materialThickness] ?? 0;
+  }
+  kerf = Number(kerf) || 0;
+  
   // Otimiza os movimentos se a opção estiver habilitada
   const processedMovements = options.optimize ? 
     optimizeMovements(movements) : movements;
@@ -339,6 +349,11 @@ export function calculateCuttingTime(
     let { time, distance, isCutting } = calculateTimeForMovement(movement, cuttingSpeed);
     distance *= scale;
     time *= scale;
+    
+    // Aplica kerf apenas para movimentos de corte
+    if (isCutting && kerf > 0 && options.materialThickness > 0) {
+      distance *= (1 + kerf / options.materialThickness);
+    }
     
     // Acumula distâncias
     result.totalDistance += distance;

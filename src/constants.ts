@@ -36,6 +36,22 @@ export const PIERCE_TIMES: Record<number, number> = {
   12.7: 1.6
 };
 
+export const KERF_DISTANCE: Record<number, number> = {
+  0.5: 0.0,
+  0.9: 0.05,
+  1.2: 0.1,
+  1.5: 0.35,
+  2.0: 0.25,
+  2.65: 0.25,
+  3.0: 0.3,
+  4.75: 0.35,
+  5.0: 0.35,
+  6.35: 0.25,
+  8.0: 0.4,
+  9.5: 0.4,
+  12.7: 1.4
+};
+
 // Velocidade de movimento rápido (posicionamento) em mm/min
 export const RAPID_SPEED = 16000;
 
