@@ -1,13 +1,14 @@
-const fs = require('fs');
-const DxfParser = require('dxf-parser');
-const dxf = fs.readFileSync('./src/LPEL-0040.dxf', 'utf8');
+import fs from 'fs';
+import DxfParser from 'dxf-parser';
+
+const dxf = fs.readFileSync('./src/LPEL-1530.dxf', 'utf8');
 const parser = new DxfParser();
 const parsed = parser.parseSync(dxf);
-const filtered = parsed.entities.filter(e => ['LINE','CIRCLE','ARC','LWPOLYLINE','POLYLINE'].includes(e.type));
-filtered.forEach((e,i) => {
+const filtered = parsed.entities.filter((e:any) => ['LINE','CIRCLE','ARC','LWPOLYLINE','POLYLINE'].includes(e.type));
+filtered.forEach((e:any,i:number) => {
   if(e.type==='LINE'){
     if(e.vertices){
-      console.log(`#${i} LINE: (${e.vertices.map(v=>`(${v.x},${v.y})`).join(' -> ')})`);
+      console.log(`#${i} LINE: (${e.vertices.map((v:any)=>`(${v.x},${v.y})`).join(' -> ')})`);
     } else {
       console.log(`#${i} LINE: (${e.x1},${e.y1} -> ${e.x2},${e.y2})`);
     }
