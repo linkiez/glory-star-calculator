@@ -53,7 +53,7 @@ export const KERF_DISTANCE: Record<number, number> = {
 };
 
 // Velocidade de movimento rápido (posicionamento) em mm/min
-export const RAPID_SPEED = 16000;
+export const RAPID_SPEED = 8000;
 
 // Tempo médio de aceleração/desaceleração em segundos
 export const ACCELERATION_TIME = 0.2;
