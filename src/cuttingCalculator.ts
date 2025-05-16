@@ -408,11 +408,20 @@ export function calculateCuttingTimeFromDxf(dxfString: string, options: CuttingT
   if (!dxf || !dxf.entities) return calculateCuttingTime([], options);
   for (const entity of dxf.entities) {
     if (entity.type === 'LINE') {
-      movements.push({
-        start: { x: entity.x1, y: entity.y1 },
-        end: { x: entity.x2, y: entity.y2 },
-        isCutting: true
-      });
+      // Suporte para DXF que retorna vertices ao invés de x1/y1/x2/y2
+      if (entity.vertices && entity.vertices.length === 2) {
+        movements.push({
+          start: { x: entity.vertices[0].x, y: entity.vertices[0].y },
+          end: { x: entity.vertices[1].x, y: entity.vertices[1].y },
+          isCutting: true
+        });
+      } else {
+        movements.push({
+          start: { x: entity.x1, y: entity.y1 },
+          end: { x: entity.x2, y: entity.y2 },
+          isCutting: true
+        });
+      }
     }
     if (entity.type === 'CIRCLE') {
       const circle = entity as any;

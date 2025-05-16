@@ -6,11 +6,11 @@
  */
 
 import {
-    calculateCuttingTimeFromSvg,
-    CuttingTimeOptions,
-    CuttingTimeResult
+  calculateCuttingTimeFromDxf,
+  calculateCuttingTimeFromSvg,
+  CuttingTimeOptions,
+  CuttingTimeResult
 } from './index';
-import { calculateCuttingTimeFromDxf } from './cuttingCalculator';
 
 // Exemplo universal (browser e Node.js)
 const svgString = `
@@ -154,3 +154,77 @@ console.log('=== EXEMPLOS DE CÁLCULO DE TEMPO DE CORTE ===');
 [1.0, 3.0, 5.0, 10.0, 15.0].forEach(thickness => {
   exampleWithSvgString(simpleSvg, thickness);
 });
+
+// --- TESTE REAL COM ARQUIVOS DXF (Node.js) ---
+if (typeof require !== 'undefined' && typeof module !== 'undefined') {
+  const fs = require('fs');
+  const path = require('path');
+  const { calculateCuttingTimeFromDxf } = require('./cuttingCalculator');
+
+  function testDxfFile(filename: string, targetDistance: number, targetTime: number) {
+    const filePath = path.join(__dirname, filename);
+    const dxfString = fs.readFileSync(filePath, 'utf8');
+    let scale = 1;
+    let result = calculateCuttingTimeFromDxf(dxfString, { materialThickness: 3, optimize: true, scaleFactor: scale });
+    let lastDiff = Math.abs(result.totalTimeSec - targetTime);
+    let min = 0.001, max = 10;
+    for (let i = 0; i < 20; i++) {
+      result = calculateCuttingTimeFromDxf(dxfString, { materialThickness: 3, optimize: true, scaleFactor: scale });
+      const diff = result.totalTimeSec - targetTime;
+      if (Math.abs(diff) < 0.2) break;
+      if (diff > 0) max = scale;
+      else min = scale;
+      scale = (min + max) / 2;
+      if (Math.abs(diff - lastDiff) < 0.01) break;
+      lastDiff = diff;
+    }
+    console.log(`\n=== RESULTADO PARA ${filename} ===`);
+    console.log(`Distância de corte: ${result.cuttingDistance.toFixed(2)}mm (esperado: ${targetDistance}mm)`);
+    console.log(`Tempo total: ${result.totalTimeSec.toFixed(2)}s (esperado: ${targetTime}s)`);
+    console.log(`scaleFactor usado: ${scale}`);
+    console.log(`Diferença de tempo: ${(result.totalTimeSec - targetTime).toFixed(2)}s`);
+    console.log(`Diferença de distância: ${(result.cuttingDistance - targetDistance).toFixed(2)}mm`);
+  }
+
+  // Testes reais
+  testDxfFile('quadrado.dxf', 1000, 23);
+  testDxfFile('redondo.dxf', 1000, 23);
+
+  type ThicknessTarget = { thickness: number; targetTime: number };
+
+  function testDxfFileAllThicknesses(filename: string, thicknessTargets: ThicknessTarget[]) {
+    const filePath = path.join(__dirname, filename);
+    const dxfString = fs.readFileSync(filePath, 'utf8');
+    thicknessTargets.forEach(({ thickness, targetTime }: ThicknessTarget) => {
+      let scale = 1;
+      let result = calculateCuttingTimeFromDxf(dxfString, { materialThickness: thickness, optimize: true, scaleFactor: scale });
+      let lastDiff = Math.abs(result.totalTimeSec - targetTime);
+      let min = 0.001, max = 10;
+      for (let i = 0; i < 20; i++) {
+        result = calculateCuttingTimeFromDxf(dxfString, { materialThickness: thickness, optimize: true, scaleFactor: scale });
+        const diff = result.totalTimeSec - targetTime;
+        if (Math.abs(diff) < 0.5) break;
+        if (diff > 0) max = scale;
+        else min = scale;
+        scale = (min + max) / 2;
+        if (Math.abs(diff - lastDiff) < 0.01) break;
+        lastDiff = diff;
+      }
+      console.log(`\n=== ${filename} | Espessura: ${thickness}mm | Tempo alvo: ${targetTime}s ===`);
+      console.log(`Tempo total: ${result.totalTimeSec.toFixed(2)}s`);
+      console.log(`Distância de corte: ${result.cuttingDistance.toFixed(2)}mm`);
+      console.log(`scaleFactor usado: ${scale}`);
+      console.log(`Diferença de tempo: ${(result.totalTimeSec - targetTime).toFixed(2)}s`);
+    });
+  }
+
+  const thicknessTargets: ThicknessTarget[] = [
+    { thickness: 3.0, targetTime: 23 },
+    { thickness: 1.5, targetTime: 17 },
+    { thickness: 6.35, targetTime: 44 },
+    { thickness: 12.7, targetTime: 73 }
+  ];
+
+  testDxfFileAllThicknesses('quadrado.dxf', thicknessTargets);
+  testDxfFileAllThicknesses('redondo.dxf', thicknessTargets);
+}
