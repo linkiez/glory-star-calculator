@@ -189,49 +189,57 @@ function calculateTimeForMovement(movement: Movement, cuttingSpeed: number): {
 
 /**
  * Otimiza o caminho de corte para minimizar movimentos
- * (Implementação básica de otimização gulosa)
+ * (Implementação aprimorada de otimização)
  */
 function optimizeMovements(movements: Movement[]): Movement[] {
   if (movements.length <= 1) {
     return [...movements];
   }
-  
+
   // Separa movimentos de corte e posicionamento
   const cuttingSegments: Movement[][] = [];
   let currentSegment: Movement[] = [];
-  
-  // Agrupa movimentos de corte contínuos
+
+  // Agrupa movimentos de corte contínuos OU conectados
+  const EPSILON = 0.01;
   for (let i = 0; i < movements.length; i++) {
     if (movements[i].isCutting) {
-      currentSegment.push(movements[i]);
+      if (
+        currentSegment.length === 0 ||
+        (Math.abs(movements[i].start.x - currentSegment[currentSegment.length - 1].end.x) < EPSILON &&
+         Math.abs(movements[i].start.y - currentSegment[currentSegment.length - 1].end.y) < EPSILON)
+      ) {
+        currentSegment.push(movements[i]);
+      } else {
+        cuttingSegments.push([...currentSegment]);
+        currentSegment = [movements[i]];
+      }
     } else if (currentSegment.length > 0) {
       cuttingSegments.push([...currentSegment]);
       currentSegment = [];
     }
   }
-  
   if (currentSegment.length > 0) {
     cuttingSegments.push([...currentSegment]);
   }
-  
+
   // Se não há segmentos de corte, retorna os movimentos originais
   if (cuttingSegments.length === 0) {
     return [...movements];
   }
-  
+
   // Reorganiza os segmentos para minimizar movimentos
   const optimizedMovements: Movement[] = [];
   let currentPoint: Point = { x: 0, y: 0 }; // Ponto inicial
-  
+
   while (cuttingSegments.length > 0) {
     // Encontra o segmento mais próximo do ponto atual
     let closestSegmentIndex = 0;
     let minDistance = Infinity;
     let useReverseOrder = false;
-    
+
     for (let i = 0; i < cuttingSegments.length; i++) {
       const segment = cuttingSegments[i];
-      
       // Distância até o primeiro ponto do segmento
       const distToStart = calculateDistance(currentPoint, segment[0].start);
       if (distToStart < minDistance) {
@@ -239,59 +247,107 @@ function optimizeMovements(movements: Movement[]): Movement[] {
         closestSegmentIndex = i;
         useReverseOrder = false;
       }
-      
       // Distância até o último ponto do segmento (segmento invertido)
-      const lastMovement = segment[segment.length - 1];
-      const distToEnd = calculateDistance(currentPoint, lastMovement.end);
-      if (distToEnd < minDistance) {
-        minDistance = distToEnd;
-        closestSegmentIndex = i;
-        useReverseOrder = true;
+      if (segment.length > 1) { // só faz sentido inverter se houver mais de um movimento
+        const lastMovement = segment[segment.length - 1];
+        const distToEnd = calculateDistance(currentPoint, lastMovement.end);
+        if (distToEnd < minDistance) {
+          minDistance = distToEnd;
+          closestSegmentIndex = i;
+          useReverseOrder = true;
+        }
       }
     }
-    
-    // Adiciona movimento de posicionamento para o próximo segmento
+
+    // Adiciona movimento de posicionamento para o próximo segmento, se necessário
     const segment = cuttingSegments[closestSegmentIndex];
-    
-    if (useReverseOrder) {
-      // Inverte o segmento se for mais eficiente
-      const lastMovement = segment[segment.length - 1];
-      
+    let segmentStart: Point, segmentEnd: Point;
+    if (useReverseOrder && segment.length > 1) {
+      segmentStart = segment[segment.length - 1].end;
+      segmentEnd = segment[0].start;
+    } else {
+      segmentStart = segment[0].start;
+      segmentEnd = segment[segment.length - 1].end;
+    }
+    // Só adiciona movimento de posicionamento se não estiver já conectado
+    if (currentPoint.x !== segmentStart.x || currentPoint.y !== segmentStart.y) {
       optimizedMovements.push({
         start: currentPoint,
-        end: lastMovement.end,
+        end: segmentStart,
         isCutting: false
       });
-      
-      // Adiciona os movimentos de corte em ordem inversa
+    }
+
+    // Adiciona os movimentos de corte
+    if (useReverseOrder && segment.length > 1) {
       for (let i = segment.length - 1; i >= 0; i--) {
-        const movement = segment[i];
         optimizedMovements.push({
-          start: movement.end,
-          end: movement.start,
+          start: segment[i].end,
+          end: segment[i].start,
           isCutting: true
         });
       }
-      
       currentPoint = segment[0].start;
     } else {
-      optimizedMovements.push({
-        start: currentPoint,
-        end: segment[0].start,
-        isCutting: false
-      });
-      
-      // Adiciona os movimentos de corte na ordem original
       optimizedMovements.push(...segment);
-      
       currentPoint = segment[segment.length - 1].end;
     }
-    
+
     // Remove o segmento processado
     cuttingSegments.splice(closestSegmentIndex, 1);
   }
-  
+
+  // Remove movimento de posicionamento inicial se for desnecessário
+  if (optimizedMovements.length > 0 && !optimizedMovements[0].isCutting &&
+      optimizedMovements[1] && optimizedMovements[0].end.x === optimizedMovements[1].start.x && optimizedMovements[0].end.y === optimizedMovements[1].start.y) {
+    optimizedMovements.shift();
+  }
+
   return optimizedMovements;
+}
+
+/**
+ * Função utilitária para inserir movimentos de posicionamento entre segmentos desconectados
+ */
+function insertPositioningMovements(movements: Movement[]): Movement[] {
+  if (movements.length === 0) return [];
+  const EPSILON = 0.01;
+  const result: Movement[] = [movements[0]];
+  for (let i = 1; i < movements.length; i++) {
+    const prev = result[result.length - 1];
+    const curr = movements[i];
+    if (
+      Math.abs(prev.end.x - curr.start.x) > EPSILON ||
+      Math.abs(prev.end.y - curr.start.y) > EPSILON
+    ) {
+      result.push({
+        start: prev.end,
+        end: curr.start,
+        isCutting: false
+      });
+    }
+    result.push(curr);
+  }
+  return result;
+}
+
+/**
+ * Função utilitária para normalizar movimentos para a origem
+ */
+function normalizeMovementsToOrigin(movements: Movement[]): Movement[] {
+  if (movements.length === 0) return movements;
+  let minX = Infinity, minY = Infinity;
+  for (const m of movements) {
+    minX = Math.min(minX, m.start.x, m.end.x);
+    minY = Math.min(minY, m.start.y, m.end.y);
+  }
+  // Se já está na origem, não faz nada
+  if (Math.abs(minX) < 1e-6 && Math.abs(minY) < 1e-6) return movements;
+  return movements.map(m => ({
+    ...m,
+    start: { x: m.start.x - minX, y: m.start.y - minY },
+    end: { x: m.end.x - minX, y: m.end.y - minY }
+  }));
 }
 
 /**
@@ -332,8 +388,13 @@ export function calculateCuttingTime(
   kerf = Number(kerf) || 0;
   
   // Otimiza os movimentos se a opção estiver habilitada
-  const processedMovements = options.optimize ? 
-    optimizeMovements(movements) : movements;
+  let processedMovements = movements;
+  if (options.optimize) {
+    // Normaliza para origem antes de otimizar
+    processedMovements = optimizeMovements(normalizeMovementsToOrigin(insertPositioningMovements(movements)));
+  } else {
+    processedMovements = movements;
+  }
   
   // Obtém a velocidade de corte baseada na espessura do material
   const cuttingSpeed = getCuttingSpeed(options.materialThickness);
@@ -434,9 +495,39 @@ export function calculateCuttingTimeFromDxf(dxfString: string, options: CuttingT
     throw new Error('Erro ao fazer o parse do DXF: ' + e);
   }
   const movements: Movement[] = [];
+  const entityTypes: Record<string, number> = {};
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   if (!dxf || !dxf.entities) return calculateCuttingTime([], options);
   for (const entity of dxf.entities) {
+    entityTypes[entity.type] = (entityTypes[entity.type] || 0) + 1;
+    if (entity.type === 'INSERT' && dxf.blocks && dxf.blocks[entity.name]) {
+      // Expande o bloco
+      const block = dxf.blocks[entity.name];
+      const insertX = entity.x || 0;
+      const insertY = entity.y || 0;
+      for (const blockEntity of block.entities) {
+        // Cria uma cópia da entidade com deslocamento
+        const e = JSON.parse(JSON.stringify(blockEntity));
+        // Aplica deslocamento para entidades com pontos
+        if (e.x !== undefined && e.y !== undefined) {
+          e.x += insertX;
+          e.y += insertY;
+        }
+        if (e.center) {
+          e.center.x += insertX;
+          e.center.y += insertY;
+        }
+        if (e.vertices) {
+          for (const v of e.vertices) {
+            v.x += insertX;
+            v.y += insertY;
+          }
+        }
+        // Processa a entidade expandida como se fosse do topo
+        dxf.entities.push(e);
+      }
+      continue;
+    }
     if (entity.type === 'LINE') {
       if (entity.vertices && entity.vertices.length === 2) {
         movements.push({
@@ -536,7 +627,10 @@ export function calculateCuttingTimeFromDxf(dxfString: string, options: CuttingT
       }
     }
   }
-  const result = calculateCuttingTime(movements, options);
+  // Normaliza movimentos para enquadrar o desenho na origem
+  const normalizedMovements = normalizeMovementsToOrigin(movements);
+  console.log('Tipos de entidades encontrados no DXF:', entityTypes);
+  const result = calculateCuttingTime(normalizedMovements, options);
   if (isFinite(minX) && isFinite(maxX) && isFinite(minY) && isFinite(maxY)) {
     result.cutAreaWidth = maxX - minX;
     result.cutAreaHeight = maxY - minY;
