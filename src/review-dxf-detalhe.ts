@@ -1,6 +1,6 @@
-import fs from 'fs';
 import DxfParser from 'dxf-parser';
-import { calculateDistance, calculateCuttingTimeFromDxf } from './cuttingCalculator';
+import fs from 'fs';
+import { calculateCuttingTimeFromDxf, calculateDistance } from './cuttingCalculator';
 
 const dxf = fs.readFileSync('./src/LPEL-1530.dxf', 'utf8');
 const parser = new DxfParser();

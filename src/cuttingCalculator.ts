@@ -400,12 +400,26 @@ export function calculateCuttingTimeFromSvg(
 ): CuttingTimeResult {
   // Processa o SVG para extrair elementos
   const elements = processSvg(svgContent);
-  
+
   // Converte os elementos em movimentos
   const movements = convertElementsToMovements(elements);
-  
+
+  // Calcula bounding box
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const el of elements) {
+    for (const pt of el.points) {
+      minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y);
+      maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y);
+    }
+  }
+
   // Calcula o tempo de corte
-  return calculateCuttingTime(movements, options);
+  const result = calculateCuttingTime(movements, options);
+  if (isFinite(minX) && isFinite(maxX) && isFinite(minY) && isFinite(maxY)) {
+    result.cutAreaWidth = maxX - minX;
+    result.cutAreaHeight = maxY - minY;
+  }
+  return result;
 }
 
 /**
@@ -420,21 +434,32 @@ export function calculateCuttingTimeFromDxf(dxfString: string, options: CuttingT
     throw new Error('Erro ao fazer o parse do DXF: ' + e);
   }
   const movements: Movement[] = [];
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   if (!dxf || !dxf.entities) return calculateCuttingTime([], options);
   for (const entity of dxf.entities) {
     if (entity.type === 'LINE') {
-      // Suporte para DXF que retorna vertices ao invés de x1/y1/x2/y2
       if (entity.vertices && entity.vertices.length === 2) {
         movements.push({
           start: { x: entity.vertices[0].x, y: entity.vertices[0].y },
           end: { x: entity.vertices[1].x, y: entity.vertices[1].y },
           isCutting: true
         });
+        [entity.vertices[0], entity.vertices[1]].forEach((pt: any) => {
+          minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y);
+          maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y);
+        });
       } else {
         movements.push({
           start: { x: entity.x1, y: entity.y1 },
           end: { x: entity.x2, y: entity.y2 },
           isCutting: true
+        });
+        [
+          { x: entity.x1, y: entity.y1 },
+          { x: entity.x2, y: entity.y2 }
+        ].forEach((pt) => {
+          minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y);
+          maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y);
         });
       }
     }
@@ -455,6 +480,10 @@ export function calculateCuttingTimeFromDxf(dxfString: string, options: CuttingT
           end: points[(i + 1) % steps],
           isCutting: true
         });
+        [points[i], points[(i + 1) % steps]].forEach((pt) => {
+          minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y);
+          maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y);
+        });
       }
     }
     if (entity.type === 'ARC') {
@@ -466,16 +495,18 @@ export function calculateCuttingTimeFromDxf(dxfString: string, options: CuttingT
       for (let i = 0; i < steps; i++) {
         const a1 = startAngle + (sweep * i) / steps;
         const a2 = startAngle + (sweep * (i + 1)) / steps;
-        movements.push({
-          start: {
-            x: arc.center.x + arc.radius * Math.cos(a1),
-            y: arc.center.y + arc.radius * Math.sin(a1)
-          },
-          end: {
-            x: arc.center.x + arc.radius * Math.cos(a2),
-            y: arc.center.y + arc.radius * Math.sin(a2)
-          },
-          isCutting: true
+        const pt1 = {
+          x: arc.center.x + arc.radius * Math.cos(a1),
+          y: arc.center.y + arc.radius * Math.sin(a1)
+        };
+        const pt2 = {
+          x: arc.center.x + arc.radius * Math.cos(a2),
+          y: arc.center.y + arc.radius * Math.sin(a2)
+        };
+        movements.push({ start: pt1, end: pt2, isCutting: true });
+        [pt1, pt2].forEach((pt) => {
+          minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y);
+          maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y);
         });
       }
     }
@@ -487,6 +518,10 @@ export function calculateCuttingTimeFromDxf(dxfString: string, options: CuttingT
           end: { x: poly.vertices[i + 1].x, y: poly.vertices[i + 1].y },
           isCutting: true
         });
+        [poly.vertices[i], poly.vertices[i + 1]].forEach((pt: any) => {
+          minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y);
+          maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y);
+        });
       }
       if (poly.closed) {
         movements.push({
@@ -494,8 +529,17 @@ export function calculateCuttingTimeFromDxf(dxfString: string, options: CuttingT
           end: { x: poly.vertices[0].x, y: poly.vertices[0].y },
           isCutting: true
         });
+        [poly.vertices[poly.vertices.length - 1], poly.vertices[0]].forEach((pt: any) => {
+          minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y);
+          maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y);
+        });
       }
     }
   }
-  return calculateCuttingTime(movements, options);
+  const result = calculateCuttingTime(movements, options);
+  if (isFinite(minX) && isFinite(maxX) && isFinite(minY) && isFinite(maxY)) {
+    result.cutAreaWidth = maxX - minX;
+    result.cutAreaHeight = maxY - minY;
+  }
+  return result;
 }

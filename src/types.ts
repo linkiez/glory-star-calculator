@@ -45,6 +45,8 @@ export interface CuttingTimeResult {
   movementDistance: number;
   pierceCount: number;
   partCount: number;
+  cutAreaWidth?: number;
+  cutAreaHeight?: number;
 }
 
 // Opções para o cálculo do tempo de corte

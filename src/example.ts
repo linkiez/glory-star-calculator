@@ -67,6 +67,14 @@ function displayResults(result: CuttingTimeResult): void {
   console.log(`Distância total: ${result.totalDistance.toFixed(2)}mm`);
   console.log(`Distância de corte: ${result.cuttingDistance.toFixed(2)}mm`);
   console.log(`Distância de movimento: ${result.movementDistance.toFixed(2)}mm`);
+  if (
+    typeof (result as any).cutAreaWidth === 'number' &&
+    typeof (result as any).cutAreaHeight === 'number'
+  ) {
+    console.log(`\n--- ÁREA DE CORTE ---`);
+    console.log(`Largura da área de corte: ${(result as any).cutAreaWidth.toFixed(2)}mm`);
+    console.log(`Altura da área de corte: ${(result as any).cutAreaHeight.toFixed(2)}mm`);
+  }
   console.log('\n--- CONTAGENS ---');
   console.log(`Número de perfurações: ${result.pierceCount}`);
   console.log(`Número de peças: ${result.partCount}`);

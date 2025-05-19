@@ -1,21 +1,23 @@
-import fs from 'fs';
 import DxfParser from 'dxf-parser';
+import fs from 'fs';
 
 const dxf = fs.readFileSync('./src/LPEL-1530.dxf', 'utf8');
 const parser = new DxfParser();
 const parsed = parser.parseSync(dxf);
 
-const allTypes = {};
-parsed.entities.forEach(e => {
-  allTypes[e.type] = (allTypes[e.type] || 0) + 1;
-});
+const allTypes: Record<string, number> = {};
+if (parsed && parsed.entities) {
+  (parsed.entities as any[]).forEach((e: any) => {
+    allTypes[e.type] = (allTypes[e.type] ?? 0) + 1;
+  });
+}
 console.log('Tipos de entidades encontrados no DXF:');
 console.log(allTypes);
 
 const relevant = ['LINE','CIRCLE','ARC','LWPOLYLINE','POLYLINE'];
-const processed = parsed.entities.filter(e => relevant.includes(e.type));
+const processed = parsed && parsed.entities ? (parsed.entities as any[]).filter((e: any) => relevant.includes(e.type)) : [];
 console.log('\nEntidades processadas:');
-processed.forEach((e,i) => {
+processed.forEach((e: any, i: number) => {
   if(e.type==='LINE'){
     if(e.vertices){
       console.log(`#${i} LINE: (${e.vertices.map((v:any)=>`(${v.x},${v.y})`).join(' -> ')})`);
@@ -32,12 +34,12 @@ processed.forEach((e,i) => {
 });
 
 console.log(`\nTotal de entidades processadas: ${processed.length}`);
-console.log(`Total de entidades no arquivo: ${parsed.entities.length}`);
+console.log(`Total de entidades no arquivo: ${parsed && parsed.entities ? parsed.entities.length : 0}`);
 
-const notProcessed = parsed.entities.filter(e => !relevant.includes(e.type));
+const notProcessed = parsed && parsed.entities ? (parsed.entities as any[]).filter((e: any) => !relevant.includes(e.type)) : [];
 if(notProcessed.length > 0){
   console.log('\nEntidades NÃO processadas:');
-  notProcessed.forEach((e,i) => {
+  notProcessed.forEach((e: any, i: number) => {
     console.log(`#${i} ${e.type}`);
   });
 } else {
