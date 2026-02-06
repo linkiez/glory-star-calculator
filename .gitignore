@@ -20,6 +20,7 @@ coverage/
 .env.development.local
 .env.test.local
 .env.production.local
+.npmrc
 
 # Arquivos do sistema operacional
 .DS_Store

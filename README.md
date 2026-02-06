@@ -4,8 +4,30 @@ Biblioteca em TypeScript para calcular o tempo de corte a partir de arquivos SVG
 
 ## Instalação
 
+### Instalação via GitHub Packages
+
+Este pacote é publicado no GitHub Packages. Para instalá-lo, primeiro configure o `.npmrc`:
+
+```bash
+echo "@linkiez:registry=https://npm.pkg.github.com" >> .npmrc
+```
+
+Em seguida, configure a autenticação criando um token do GitHub com permissão `read:packages` e adicione ao `.npmrc`:
+
+```bash
+echo "//npm.pkg.github.com/:_authToken=SEU_GITHUB_TOKEN" >> .npmrc
+```
+
+Agora você pode instalar o pacote:
+
 ```bash
 npm install @linkiez/glory-star-calculator
+```
+
+Ou com yarn:
+
+```bash
+yarn add @linkiez/glory-star-calculator
 ```
 
 ## Recursos
@@ -122,3 +144,20 @@ ISC
 ## Contribuições
 
 Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests.
+
+## Versionamento e Publicação
+
+Este projeto utiliza [semantic-release](https://github.com/semantic-release/semantic-release) para versionamento automático e publicação.
+
+### Formato de Commits
+
+Use o formato [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat:` - Nova funcionalidade (incrementa versão minor)
+- `fix:` - Correção de bug (incrementa versão patch)
+- `chore:` - Tarefas de manutenção (sem incremento de versão)
+- `docs:` - Mudanças na documentação (sem incremento de versão)
+
+Para breaking changes, adicione `!` após o tipo ou `BREAKING CHANGE:` no corpo do commit para incrementar a versão major.
+
+Consulte [SEMANTIC_RELEASE.md](SEMANTIC_RELEASE.md) para mais detalhes.
