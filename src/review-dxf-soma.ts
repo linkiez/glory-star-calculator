@@ -1,4 +1,5 @@
-import fs from 'fs';
+import fs from 'node:fs';
+import path from 'node:path';
 import { calculateCuttingTimeFromDxf } from './cuttingCalculator';
 import { Movement } from './types';
 
@@ -11,20 +12,23 @@ function shuffleArray(array: any[]) {
 
 const dxfFile = process.argv[2] || './src/LPEL-1530.dxf';
 const thickness = Number(process.argv[3]) || 3;
-const dxf = fs.readFileSync(dxfFile, 'utf8');
+
+// Sanitize path to prevent path traversal
+const safeDxfFile = path.normalize(dxfFile).replace(/^(\.\.(\/|\\|$))+/, '');
+const dxf = fs.readFileSync(safeDxfFile, 'utf8');
 
 // --- Embaralhar movimentos para simular segmentos desconectados ---
 const { calculateCuttingTime } = require('./cuttingCalculator');
 const parser = new (require('dxf-parser'))();
 const parsed = parser.parseSync(dxf);
 const movements: Movement[] = [];
-if (parsed && parsed.entities) {
+if (parsed?.entities) {
   console.log('\n--- POSIÇÕES DAS ENTIDADES ---');
   for (const entity of parsed.entities) {
     if (entity.type === 'CIRCLE' && entity.center) {
       console.log(`CIRCLE: center=(${entity.center.x.toFixed(2)}, ${entity.center.y.toFixed(2)}), r=${entity.radius}`);
     } else if (entity.type === 'LINE') {
-      if (entity.vertices && entity.vertices.length === 2) {
+      if (entity.vertices?.length === 2) {
         console.log(`LINE: (${entity.vertices[0].x.toFixed(2)}, ${entity.vertices[0].y.toFixed(2)}) -> (${entity.vertices[1].x.toFixed(2)}, ${entity.vertices[1].y.toFixed(2)})`);
       } else {
         console.log(`LINE: (${entity.x1.toFixed(2)}, ${entity.y1.toFixed(2)}) -> (${entity.x2.toFixed(2)}, ${entity.y2.toFixed(2)})`);

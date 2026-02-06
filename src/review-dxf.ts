@@ -1,5 +1,5 @@
 import DxfParser from 'dxf-parser';
-import fs from 'fs';
+import fs from 'node:fs';
 
 const dxf = fs.readFileSync('./src/LPEL-1530.dxf', 'utf8');
 const parser = new DxfParser();
@@ -8,7 +8,8 @@ const filtered = parsed?.entities ? (parsed.entities as any[]).filter((e: any) =
 filtered.forEach((e: any, i: number) => {
   if(e.type==='LINE'){
     if(e.vertices){
-      console.log(`#${i} LINE: (${e.vertices.map((v:any)=>`(${v.x},${v.y})`).join(' -> ')})`);
+      const verticesStr = e.vertices.map((v:any)=>`(${v.x},${v.y})`).join(' -> ');
+      console.log(`#${i} LINE: (${verticesStr})`);
     } else {
       console.log(`#${i} LINE: (${e.x1},${e.y1} -> ${e.x2},${e.y2})`);
     }
