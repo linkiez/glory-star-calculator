@@ -99,10 +99,10 @@ BREAKING CHANGE: A API de autenticação foi completamente redesenhada"
 
 ```bash
 # 1. Fazer alterações no código
-vim src/cuttingCalculator.ts
+vim src/calculation/calculateCuttingTime.ts
 
 # 2. Adicionar arquivos
-git add src/cuttingCalculator.ts
+git add src/calculation/calculateCuttingTime.ts src/calculation/calculateCuttingTime.doc.md
 
 # 3. Commit seguindo conventional commits
 git commit -m "feat: adicionar suporte para corte circular otimizado"

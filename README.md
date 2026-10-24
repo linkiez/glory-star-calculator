@@ -276,4 +276,4 @@ Use o formato [Conventional Commits](https://www.conventionalcommits.org/):
 
 Para breaking changes, adicione `!` após o tipo ou `BREAKING CHANGE:` no corpo do commit para incrementar a versão major.
 
-Consulte o [guia de publicação](./SEMANTIC_RELEASE.md) para mais detalhes.
+Consulte o [guia de publicação](./docs/releasing/semantic-release.md) para mais detalhes.
