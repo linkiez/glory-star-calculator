@@ -5,12 +5,13 @@
  * para a máquina GloryStar_GS3015, considerando diferentes espessuras de chapa.
  */
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   calculateCuttingTimeFromDxf,
-  calculateCuttingTimeFromSvg,
-  CuttingTimeOptions,
-  CuttingTimeResult
+  calculateCuttingTimeFromSvg
 } from './index';
+import type { CuttingTimeResult } from './index';
 
 // Exemplo universal (browser e Node.js)
 const svgString = `
@@ -29,30 +30,15 @@ console.log('Distância de corte:', result.cuttingDistance, 'mm');
 
 // Exemplo Node.js (apenas para ambiente Node)
 // Descomente para testar em Node.js
-// import { calculateCuttingTimeFromFile, loadSvgFile } from './node';
+// import { calculateCuttingTimeFromFile, loadSvgFile } from '../src/node';
 // const fileResult = calculateCuttingTimeFromFile('/caminho/para/arquivo.svg', { materialThickness: 3.0 });
 // console.log('Tempo total para arquivo:', fileResult.totalTimeSec, 'segundos');
 
 // Exemplo de uso com string SVG
 function exampleWithSvgString(svgString: string, materialThickness: number): void {
-  try {
-    console.log(`\nCalculando tempo de corte para SVG fornecido como string`);
-    console.log(`Espessura do material: ${materialThickness}mm`);
-    
-    // Configurações para o cálculo
-    const options: CuttingTimeOptions = {
-      materialThickness,
-      optimize: true
-    };
-    
-    // Calcula o tempo de corte a partir da string SVG
-    const result = calculateCuttingTimeFromSvg(svgString, options);
-    
-    // Exibe os resultados
-    displayResults(result);
-  } catch (error) {
-    console.error(`Erro ao processar SVG: ${error}`);
-  }
+  console.log('\nCalculando tempo de corte para SVG fornecido como string');
+  console.log(`Espessura do material: ${materialThickness}mm`);
+  displayResults(calculateCuttingTimeFromSvg(svgString, { materialThickness, optimize: true }));
 }
 
 // Função auxiliar para exibir os resultados
@@ -67,17 +53,14 @@ function displayResults(result: CuttingTimeResult): void {
   console.log(`Distância total: ${result.totalDistance.toFixed(2)}mm`);
   console.log(`Distância de corte: ${result.cuttingDistance.toFixed(2)}mm`);
   console.log(`Distância de movimento: ${result.movementDistance.toFixed(2)}mm`);
-  if (
-    typeof (result as any).cutAreaWidth === 'number' &&
-    typeof (result as any).cutAreaHeight === 'number'
-  ) {
+  if (result.cutAreaWidth !== undefined && result.cutAreaHeight !== undefined) {
     console.log(`\n--- ÁREA DE CORTE ---`);
-    console.log(`Largura da área de corte: ${(result as any).cutAreaWidth.toFixed(2)}mm`);
-    console.log(`Altura da área de corte: ${(result as any).cutAreaHeight.toFixed(2)}mm`);
+    console.log(`Largura da área de corte: ${result.cutAreaWidth.toFixed(2)}mm`);
+    console.log(`Altura da área de corte: ${result.cutAreaHeight.toFixed(2)}mm`);
   }
   console.log('\n--- CONTAGENS ---');
   console.log(`Número de perfurações: ${result.pierceCount}`);
-  console.log(`Número de peças: ${result.partCount}`);
+  console.log(`Número de contornos: ${result.partCount}`);
   console.log('-----------------------------------');
 }
 
@@ -102,7 +85,7 @@ const simpleSvg = `
 `;
 
 // SVG fornecido pelo usuário para teste real
-const svgUsuario = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="2538.73653356485 -1326.094349562924 122.17508126759594 160.18219740666996" width="100%" height="100%">
+const userSvg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="2538.73653356485 -1326.094349562924 122.17508126759594 160.18219740666996" width="100%" height="100%">
   <g stroke="#000000" stroke-width="0.1%" fill="none" transform="matrix(1,0,0,-1,0,0)">
     <g stroke="rgb(0, 0, 0)"><path d="M2546.489672567668,1165.912152156254L2626.620560904849,1196.788467228995"></path></g>
 <g stroke="rgb(0, 0, 0)"><path d="M 2626.620560904845 1196.7884672289433 A 36.86474077679893 36.86474077679893 0 0 1 2652.736004432073 1235.3597367908787"></path></g>
@@ -121,31 +104,10 @@ const svgUsuario = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
 </svg>`;
 
 console.log('\n=== TESTE COM SVG DO USUÁRIO (espessura 6,35mm) ===');
-exampleWithSvgString(svgUsuario, 6.35);
+exampleWithSvgString(userSvg, 6.35);
 
-// Teste com ajuste de escala para aproximar do tempo real
-function testWithScaleFactor(svg: string, thickness: number, targetSeconds: number) {
-  let scale = 1;
-  let result = calculateCuttingTimeFromSvg(svg, { materialThickness: thickness, optimize: true, scaleFactor: scale });
-  let lastDiff = Math.abs(result.totalTimeSec - targetSeconds);
-  // Busca binária simples para ajustar o scaleFactor
-  let min = 0.001, max = 10;
-  for (let i = 0; i < 20; i++) {
-    result = calculateCuttingTimeFromSvg(svg, { materialThickness: thickness, optimize: true, scaleFactor: scale });
-    const diff = result.totalTimeSec - targetSeconds;
-    if (Math.abs(diff) < 0.5) break;
-    if (diff > 0) max = scale;
-    else min = scale;
-    scale = (min + max) / 2;
-    if (Math.abs(diff - lastDiff) < 0.01) break;
-    lastDiff = diff;
-  }
-  console.log(`\nAjuste automático de scaleFactor para tempo alvo de ${targetSeconds}s:`);
-  console.log(`scaleFactor encontrado: ${scale}`);
-  displayResults(result);
-}
-
-testWithScaleFactor(svgUsuario, 6.35, 53);
+console.log('Referência registrada neste exemplo: 53 s; confirmar receita e condições na máquina.');
+console.log('scaleFactor representa geometria e não deve ser ajustado para forçar esse tempo.');
 
 // Exemplo de string DXF simples (linha e círculo)
 const dxfString = `0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n100\n21\n0\n0\nCIRCLE\n8\n0\n10\n50\n20\n50\n40\n25\n0\nENDSEC\n0\nEOF\n`;
@@ -159,80 +121,23 @@ console.log('Distância de corte DXF:', dxfResult.cuttingDistance, 'mm');
 console.log('=== EXEMPLOS DE CÁLCULO DE TEMPO DE CORTE ===');
 
 // Exemplo com string SVG para diferentes espessuras
-[1.0, 3.0, 5.0, 10.0, 15.0].forEach(thickness => {
+[1.0, 3.0, 5.0, 10.0, 12.7].forEach(thickness => {
   exampleWithSvgString(simpleSvg, thickness);
 });
 
-// --- TESTE REAL COM ARQUIVOS DXF (Node.js) ---
-if (typeof require !== 'undefined' && typeof module !== 'undefined') {
-  const fs = require('fs');
-  const path = require('path');
-  const { calculateCuttingTimeFromDxf } = require('./cuttingCalculator');
-
-  function testDxfFile(filename: string, targetDistance: number, targetTime: number) {
-    const filePath = path.join(__dirname, filename);
-    const dxfString = fs.readFileSync(filePath, 'utf8');
-    let scale = 1;
-    let result = calculateCuttingTimeFromDxf(dxfString, { materialThickness: 3, optimize: true, scaleFactor: scale });
-    let lastDiff = Math.abs(result.totalTimeSec - targetTime);
-    let min = 0.001, max = 10;
-    for (let i = 0; i < 20; i++) {
-      result = calculateCuttingTimeFromDxf(dxfString, { materialThickness: 3, optimize: true, scaleFactor: scale });
-      const diff = result.totalTimeSec - targetTime;
-      if (Math.abs(diff) < 0.2) break;
-      if (diff > 0) max = scale;
-      else min = scale;
-      scale = (min + max) / 2;
-      if (Math.abs(diff - lastDiff) < 0.01) break;
-      lastDiff = diff;
-    }
-    console.log(`\n=== RESULTADO PARA ${filename} ===`);
-    console.log(`Distância de corte: ${result.cuttingDistance.toFixed(2)}mm (esperado: ${targetDistance}mm)`);
-    console.log(`Tempo total: ${result.totalTimeSec.toFixed(2)}s (esperado: ${targetTime}s)`);
-    console.log(`scaleFactor usado: ${scale}`);
-    console.log(`Diferença de tempo: ${(result.totalTimeSec - targetTime).toFixed(2)}s`);
-    console.log(`Diferença de distância: ${(result.cuttingDistance - targetDistance).toFixed(2)}mm`);
+// Recorded targets lack a confirmed recipe; they are not calibration coefficients.
+const thicknessTargets = [
+  { thickness: 3.0, targetTime: 23 },
+  { thickness: 1.5, targetTime: 17 },
+  { thickness: 6.35, targetTime: 44 },
+  { thickness: 12.7, targetTime: 73 }
+];
+for (const filename of ['quadrado.dxf', 'redondo.dxf']) {
+  const content = readFileSync(resolve(__dirname, filename), 'utf8');
+  for (const { thickness, targetTime } of thicknessTargets) {
+    const estimate = calculateCuttingTimeFromDxf(content, { materialThickness: thickness, optimize: true });
+    console.log(`\n=== ${filename} | Espessura: ${thickness}mm | Referência não verificada: ${targetTime}s ===`);
+    displayResults(estimate);
+    console.log(`Diferença de tempo: ${(estimate.totalTimeSec - targetTime).toFixed(2)}s`);
   }
-
-  // Testes reais
-  testDxfFile('quadrado.dxf', 1000, 23);
-  testDxfFile('redondo.dxf', 1000, 23);
-
-  type ThicknessTarget = { thickness: number; targetTime: number };
-
-  function testDxfFileAllThicknesses(filename: string, thicknessTargets: ThicknessTarget[]) {
-    const filePath = path.join(__dirname, filename);
-    const dxfString = fs.readFileSync(filePath, 'utf8');
-    thicknessTargets.forEach(({ thickness, targetTime }: ThicknessTarget) => {
-      let scale = 1;
-      let result = calculateCuttingTimeFromDxf(dxfString, { materialThickness: thickness, optimize: true, scaleFactor: scale });
-      let lastDiff = Math.abs(result.totalTimeSec - targetTime);
-      let min = 0.001, max = 10;
-      for (let i = 0; i < 20; i++) {
-        result = calculateCuttingTimeFromDxf(dxfString, { materialThickness: thickness, optimize: true, scaleFactor: scale });
-        const diff = result.totalTimeSec - targetTime;
-        if (Math.abs(diff) < 0.5) break;
-        if (diff > 0) max = scale;
-        else min = scale;
-        scale = (min + max) / 2;
-        if (Math.abs(diff - lastDiff) < 0.01) break;
-        lastDiff = diff;
-      }
-      console.log(`\n=== ${filename} | Espessura: ${thickness}mm | Tempo alvo: ${targetTime}s ===`);
-      console.log(`Tempo total: ${result.totalTimeSec.toFixed(2)}s`);
-      console.log(`Distância de corte: ${result.cuttingDistance.toFixed(2)}mm`);
-      console.log(`scaleFactor usado: ${scale}`);
-      console.log(`Diferença de tempo: ${(result.totalTimeSec - targetTime).toFixed(2)}s`);
-    });
-  }
-
-  const thicknessTargets: ThicknessTarget[] = [
-    { thickness: 3.0, targetTime: 23 },
-    { thickness: 1.5, targetTime: 17 },
-    { thickness: 6.35, targetTime: 44 },
-    { thickness: 12.7, targetTime: 73 }
-  ];
-
-  testDxfFileAllThicknesses('quadrado.dxf', thicknessTargets);
-  testDxfFileAllThicknesses('redondo.dxf', thicknessTargets);
 }

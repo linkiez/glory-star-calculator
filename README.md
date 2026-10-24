@@ -1,6 +1,7 @@
 # Glory Star GS3015 Cutting Time Calculator
 
-Biblioteca em TypeScript para calcular o tempo de corte a partir de arquivos SVG para a máquina de corte a laser GloryStar_GS3015, considerando diferentes espessuras de chapa.
+Biblioteca em TypeScript para estimar o tempo de corte de SVG e DXF para a máquina
+GloryStar_GS3015, com opções explícitas de receita e espessura.
 
 ## Instalação
 
@@ -33,12 +34,14 @@ yarn add @linkiez/glory-star-calculator
 ## Recursos
 
 - Cálculo de tempo de corte baseado em arquivos SVG
-- Suporte para diferentes espessuras de material (0.5mm a 30mm)
-- Cálculo preciso considerando:
+- Tabela de referência de 0,5 mm a 12,7 mm; outras espessuras exigem receita explícita
+- Estimativa considerando:
   - Velocidade de corte específica para cada espessura
   - Tempo de perfuração
   - Tempo de movimento (posicionamento)
-  - Otimização de caminho
+  - Otimização geométrica de caminho (não substitui o planejamento do CAM)
+- Leitura de DXF: linhas, arcos, círculos, polilinhas com bulge e blocos INSERT planares
+- Seleção explícita de receita de `DB_Laser.csv`, sem misturar materiais pela espessura
 - Suporte para elementos SVG comuns (linhas, retângulos, círculos, polígonos, caminhos)
 - Extensível para outras máquinas de corte
 
@@ -107,6 +110,12 @@ interface CuttingTimeOptions {
   leadOut?: number;              // Comprimento de saída (mm)
   piercingType?: 'normal' | 'flying'; // Tipo de perfuração
   optimize?: boolean;            // Otimizar caminho de corte
+  scaleFactor?: number;          // Escala geométrica, nunca calibração de tempo
+  cuttingSpeed?: number;         // Velocidade da receita, mm/min
+  pierceTime?: number;           // Ciclo de perfuração por contorno, segundos
+  rapidSpeed?: number;           // Posicionamento, mm/min
+  accelerationMmPerSec2?: number;// Aceleração opcional, mm/s²
+  setupTimeSec?: number;         // Setup uma vez por trabalho (padrão: 1,5 s)
 }
 ```
 
@@ -123,19 +132,75 @@ interface CuttingTimeResult {
   cuttingDistance: number;     // Distância de corte (mm)
   movementDistance: number;    // Distância de posicionamento (mm)
   pierceCount: number;         // Número de perfurações
-  partCount: number;           // Número de peças
+  partCount: number;           // Compatibilidade: número de contornos, não peças físicas
 }
 ```
 
 ## Exemplo Completo
 
-Veja o arquivo `src/example.ts` para um exemplo mais detalhado de utilização da biblioteca.
+Execute `node -r ts-node/register src/example.ts` para os exemplos em
+[src/example.ts](./src/example.ts).
 
-## Limitações
+## Receita da máquina
 
-- A biblioteca implementa uma versão simplificada do parser de SVG, podendo não suportar todos os recursos avançados.
-- Os tempos calculados são estimativas baseadas em dados da máquina GloryStar_GS3015 e podem variar em condições reais.
-- Curvas complexas em caminhos SVG são aproximadas como segmentos lineares.
+```typescript
+import { getLaserTechnologyOptions, calculateCuttingTimeFromDxf } from '@linkiez/glory-star-calculator';
+
+// csvContent e dxfContent são strings carregadas pelo aplicativo.
+const recipe = getLaserTechnologyOptions(csvContent, {
+  code: '3030',            // Exemplo: confirmar CODE efetivamente usado
+  cutProfile: 'A',
+  pierceProfile: 'A',
+  pierceTimeUnit: 'ms'     // Escolha explícita: confirmar na exportação/CAM
+});
+const result = calculateCuttingTimeFromDxf(dxfContent, {
+  ...recipe,
+  optimize: true,
+  setupTimeSec: 0         // Comparação apenas com o ciclo, sem setup
+});
+```
+
+O CSV contém 83 receitas, com códigos numéricos de materiais/gases e múltiplos
+perfis. Não identifica a unidade de perfuração nem quais estágios estão ativos.
+`ms` converte 30 em 0,03 s; `cs` em 0,30 s; `s` em 30 s. Não são somados
+automaticamente os perfis A–F. Para perfuração em estágios, forneça em `pierceTime`
+o ciclo completo confirmado na máquina. O CSV não é incorporado ao pacote.
+
+## Precisão e limites
+
+- [Estudo técnico, evidências e validação](./docs/cutting-time-study.md).
+- A geometria dos quatro DXFs fornecidos é testada contra comprimentos analíticos,
+  com erro relativo inferior a 0,01%. Isso **não comprova** precisão do tempo real.
+- Sem receita explícita, velocidades e perfurações usam a tabela de referência,
+  que não identifica material, gás ou potência. As funções de consulta mantêm
+  interpolação e saturação nos extremos; o cálculo rejeita espessuras fora da
+  tabela quando faltam parâmetros explícitos.
+- Aceleração informada usa um perfil triangular/trapezoidal por contorno contínuo
+  e por deslocamento. Sem ela, aplica-se a referência de 0,2 s por contorno ou
+  deslocamento com pelo menos 5 mm. Não existe penalização por subdivisão de curva.
+- Reduções em cantos, jerk, subida/descida de Z, sopro, microjuntas, nesting e
+  estratégias do controlador não são simulados. É necessário validar com o CAM
+  e medições reais antes de utilizar a estimativa para prazo/custo.
+- `leadIn`/`leadOut` são comprimentos em mm acrescentados uma vez por contorno, à
+  velocidade de corte. Não geram geometria para o posicionamento ou bounding box.
+- `kerf` não multiplica comprimento nem tempo. Compensação de contorno deve ser
+  feita no CAM; a biblioteca mede a linha central fornecida.
+- DXF sem `$INSUNITS` ou com unidade 0 assume mm. Unidades declaradas suportadas
+  são convertidas antes de `scaleFactor`. O primeiro ponto DXF é o início do
+  trabalho, sem deslocamento inicial desconhecido da máquina.
+- SVG unitless mantém a convenção CAD de 1 unidade = 1 mm. `viewBox` com dimensões
+  físicas absolutas define a escala. Com percentuais sem viewport externo,
+  preserva-se 1 unidade = 1 mm; informe `scaleFactor` se necessário. Sem `viewBox`,
+  viewport com unidade física usa pixels CSS (96 dpi). Atributos geométricos
+  devem ser numéricos nas unidades do desenho.
+- SVG aceita comandos M/L/H/V/C/S/Q/T/A/Z, subpaths e transformações. CSS
+  geométrico, `use`, máscaras, recortes e SVG aninhado são rejeitados; converta
+  antes para caminhos. Definições e elementos explicitamente ocultos não cortam.
+- DXF aceita geometrias planares citadas acima. Splines, elipses e extrusões não
+  suportadas geram erro em vez de um orçamento parcial; converta para arcos/linhas.
+- `optimize` usa vizinho mais próximo por contorno e não garante corte interno
+  antes do externo. Para reproduzir o CAM, forneça os movimentos na ordem real
+  com `optimize: false`.
 
 ## Licença
 
@@ -160,4 +225,4 @@ Use o formato [Conventional Commits](https://www.conventionalcommits.org/):
 
 Para breaking changes, adicione `!` após o tipo ou `BREAKING CHANGE:` no corpo do commit para incrementar a versão major.
 
-Consulte [SEMANTIC_RELEASE.md](SEMANTIC_RELEASE.md) para mais detalhes.
+Consulte o [guia de publicação](./SEMANTIC_RELEASE.md) para mais detalhes.

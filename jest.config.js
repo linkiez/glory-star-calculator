@@ -21,6 +21,6 @@ module.exports = {
       tsconfig: 'tsconfig.json',
     }]
   },
-  testMatch: ['**/__tests__/**/*.test.ts'],
+  testMatch: ['<rootDir>/test/**/*.test.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/']
 };

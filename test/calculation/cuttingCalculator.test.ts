@@ -4,8 +4,8 @@ import {
   calculateDistance,
   getCuttingSpeed,
   getPierceTime
-} from '../../src/cuttingCalculator';
-import { CuttingTimeOptions, Movement, Point } from '../../src/types';
+} from '../../src';
+import { CuttingTimeOptions, Movement, Point } from '../../src/models';
 
 describe('GloryStar Cutting Calculator', () => {
   // Teste para cálculo de distância
