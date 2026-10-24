@@ -4,7 +4,7 @@ import { getLaserTechnologyOptions } from '../../src/technology/getLaserTechnolo
 import { calculateCuttingTime } from '../../src';
 
 describe('Machine technology selection', () => {
-  const csv = readFileSync(resolve(__dirname, '../../src/DB_Laser.csv'), 'utf8');
+  const csv = readFileSync(resolve(__dirname, '../../fixtures/technology/DB_Laser.csv'), 'utf8');
 
   it('selects a unique recipe and explicitly converts milliseconds to seconds', () => {
     const options = getLaserTechnologyOptions(csv, {

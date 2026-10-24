@@ -11,10 +11,14 @@
     "test": "test"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
     "test": "jest",
+    "test:coverage": "jest --coverage",
+    "example": "ts-node examples/cuttingTime.ts",
+    "inspect:dxf": "ts-node tools/inspectDxf.ts",
     "prepare": "husky",
-    "prepublishOnly": "npm test",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "commit": "cz",

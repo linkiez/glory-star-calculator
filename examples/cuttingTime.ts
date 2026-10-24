@@ -10,8 +10,8 @@ import { resolve } from 'node:path';
 import {
   calculateCuttingTimeFromDxf,
   calculateCuttingTimeFromSvg
-} from './index';
-import type { CuttingTimeResult } from './index';
+} from '../src';
+import type { CuttingTimeResult } from '../src';
 
 // Exemplo universal (browser e Node.js)
 const svgString = `
@@ -133,7 +133,7 @@ const thicknessTargets = [
   { thickness: 12.7, targetTime: 73 }
 ];
 for (const filename of ['quadrado.dxf', 'redondo.dxf']) {
-  const content = readFileSync(resolve(__dirname, filename), 'utf8');
+  const content = readFileSync(resolve(__dirname, '../fixtures/drawings', filename), 'utf8');
   for (const { thickness, targetTime } of thicknessTargets) {
     const estimate = calculateCuttingTimeFromDxf(content, { materialThickness: thickness, optimize: true });
     console.log(`\n=== ${filename} | Espessura: ${thickness}mm | Referência não verificada: ${targetTime}s ===`);

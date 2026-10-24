@@ -138,8 +138,59 @@ interface CuttingTimeResult {
 
 ## Exemplo Completo
 
-Execute `node -r ts-node/register src/example.ts` para os exemplos em
-[src/example.ts](./src/example.ts).
+Execute `npm run example` para os exemplos em [examples/cuttingTime.ts](./examples/cuttingTime.ts).
+
+## Estrutura e desenvolvimento
+
+```text
+src/
+  index.ts                 API universal (Facade)
+  node.ts                  API de filesystem
+  adapters/node/           leitura de arquivos (Adapter)
+  calculation/             validação, planejamento e estratégias de tempo
+  formats/dxf/             DXF → movimentos em mm
+  formats/svg/             SVG → movimentos em mm
+  geometry/                distância, tolerância e limites
+  models/                  contratos compartilhados
+  technology/              seleção CSV e referências
+fixtures/
+  drawings/                DXFs de validação
+  technology/DB_Laser.csv   exportação de receitas
+test/                      testes por responsabilidade e regras arquiteturais
+examples/                  exemplos executáveis
+tools/                     diagnóstico DXF
+docs/                      estudo técnico e publicação
+```
+
+O motor não depende de parsers ou filesystem. Os formatos compartilham o pipeline
+de cálculo e limites; a Strategy funcional seleciona o modelo de movimento uma
+vez por trabalho, sem hierarquias de classes. As referências e tolerâncias têm
+fontes únicas.
+
+```bash
+npm run typecheck
+npm test -- --runInBand
+npm run test:coverage -- --runInBand
+npm run build
+npm run example
+npm run inspect:dxf -- fixtures/drawings/LPEL-1530.dxf 3
+```
+
+O typecheck inclui biblioteca, testes, exemplos e ferramentas. O build usa
+[tsconfig.build.json](./tsconfig.build.json) e emite somente a biblioteca em
+`dist`; desenhos, CSV, exemplos e diagnósticos não fazem parte do pacote.
+
+### Migração de imports internos
+
+Os módulos antigos `cuttingCalculator`, `svgProcessor`, `types` e `constants`
+na raiz de `src` não são pontos de entrada suportados. Substitua deep imports
+por imports de `@linkiez/glory-star-calculator`. Os 19 exports de runtime da API
+principal são preservados. Funções de filesystem continuam separadas em
+`@linkiez/glory-star-calculator/dist/node`; `TechnologySelection` também está
+disponível como tipo pela API principal.
+
+O CSV de desenvolvimento está em
+[fixtures/technology/DB_Laser.csv](./fixtures/technology/DB_Laser.csv), não em `src`.
 
 ## Receita da máquina
 

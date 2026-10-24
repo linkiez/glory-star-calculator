@@ -126,17 +126,19 @@ Os formatos aceitos não constituem suporte geral a qualquer documento CAD.
 ## Exemplos e validação
 
 O [README](../README.md#receita-da-máquina) mostra como fornecer a receita.
-[example.ts](../src/example.ts) compara alvos sem deformar a geometria.
+[cuttingTime.ts](../examples/cuttingTime.ts) compara alvos sem deformar a geometria.
 
 ```sh
 npm test -- --runInBand
+npm run typecheck
+npm run test:coverage -- --runInBand
 npm run build
-node -r ts-node/register src/example.ts
+npm run example
 npm pack --dry-run --ignore-scripts
 ```
 
 A suíte cobre regressões numéricas, arquitetura e adaptadores de filesystem.
-`npm test -- --coverage` mede a biblioteca.
+`test:coverage` mede a biblioteca; exemplos e diagnósticos ficam fora do build.
 Os testes não exigem acesso à internet nem à máquina.
 
 O `package-lock.json` existente diverge do manifesto: `npm ci` falha antes de

@@ -93,7 +93,7 @@ describe('Timing invariants', () => {
     ['LPEL-0040', 605.3893722612829],
     ['LPEL-1530', 474.51441738812116]
   ])('preserves analytic length of supplied %s.dxf within 0.01%%', (name, expected) => {
-    const content = readFileSync(resolve(__dirname, `../../src/${name}.dxf`), 'utf8');
+    const content = readFileSync(resolve(__dirname, `../../fixtures/drawings/${name}.dxf`), 'utf8');
     for (const optimize of [false, true]) {
       const result = calculateCuttingTimeFromDxf(content, { materialThickness: 3, optimize });
       expect(Math.abs(result.cuttingDistance - Number(expected)) / Number(expected)).toBeLessThan(0.0001);
