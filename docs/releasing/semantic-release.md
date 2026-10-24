@@ -53,6 +53,19 @@ BREAKING CHANGE: Método calculate() agora retorna Promise"
    - Create a GitHub release
    - Publish to GitHub Packages
 
+### Automated release commits
+
+The release commit contains the version, `[skip ci]`, and the co-author trailer.
+Full release notes belong in `CHANGELOG.md` and the GitHub release, not in the
+commit message: generated breaking-change notes can exceed commitlint's footer
+line-length limit. Husky and commitlint remain enabled for release commits.
+
+Run the regression check with:
+
+```bash
+npm test -- --runInBand --runTestsByPath test/architecture/release.test.ts
+```
+
 ## Installation from GitHub Packages
 
 To install this package from GitHub Packages, create a `.npmrc` file in your project:
