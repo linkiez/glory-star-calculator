@@ -3,14 +3,17 @@
 ## Visão geral
 Consulta da velocidade de referência, não uma seleção de material.
 ## Responsabilidades
-Interpolar `CUTTING_SPEEDS`.
+Interpolar a tabela de velocidades do perfil selecionado.
 ## Entradas e saídas
-Espessura em mm; velocidade em mm/min.
+Espessura em mm e identificador de máquina opcional; velocidade em mm/min.
 ## Fluxo principal
-Delegação a [interpolateParameter](./interpolateParameter.doc.md).
+Resolve perfil (Glory Star por padrão) e delega a [interpolateParameter](./interpolateParameter.doc.md).
 ## Erros e casos-limite
 Espessura deve ser positiva e finita; extremos saturam nesta API de consulta.
+Exceção: perfis `exactThicknessOnly`, como HPR400XD, exigem espessura listada
+e não interpolam nem saturam extremos.
+Perfil desconhecido ou sem tabela (Talvi) gera erro, sem referência de outra máquina.
 ## Exemplos
 `getCuttingSpeed(3)` retorna 3400.
 ## Dependências e integrações
-Constantes de referência; use receita explícita para representar a máquina.
+[Perfis](../profiles/machineProfiles.doc.md); use receita explícita para representar material/processo.

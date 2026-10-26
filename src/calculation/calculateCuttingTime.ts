@@ -13,8 +13,8 @@ import { resolveCuttingParameters } from './resolveCuttingParameters';
  * @throws Error for non-finite geometry or invalid process parameters.
  */
 export function calculateCuttingTime(movements: Movement[], options: CuttingTimeOptions): CuttingTimeResult {
-  const { scale, feed, pierceTime, rapid, setup, leadLength, acceleration } = resolveCuttingParameters(options);
-  const movementTime = createMovementTimeCalculator(acceleration);
+  const { scale, feed, pierceTime, rapid, setup, leadLength, acceleration, referenceMotion } = resolveCuttingParameters(options);
+  const movementTime = createMovementTimeCalculator(acceleration, referenceMotion);
   const result: CuttingTimeResult = {
     totalTimeSec: 0, cuttingTimeSec: 0, movementTimeSec: 0, piercingTimeSec: 0,
     setupTimeSec: 0, totalDistance: 0, cuttingDistance: 0, movementDistance: 0,

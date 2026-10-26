@@ -32,4 +32,17 @@ describe('Node filesystem adapters', () => {
     jest.mocked(readFileSync).mockReturnValue('<svg><use href="#part"/></svg>');
     expect(() => calculateCuttingTimeFromFile('unsupported.svg', options)).toThrow();
   });
+
+  it('forwards the machine profile without applying filesystem-specific defaults', () => {
+    jest.mocked(readFileSync).mockReturnValue(svg);
+    const talviOptions = {
+      materialThickness: 3, machineProfile: 'talvi-6000w-raytools' as const,
+      cuttingSpeed: 600, pierceTime: 0, rapidSpeed: 1200, setupTimeSec: 0, accelerationMmPerSec2: 10
+    };
+    expect(calculateCuttingTimeFromFile('drawing.svg', talviOptions))
+      .toEqual(calculateCuttingTimeFromSvg(svg, talviOptions));
+    expect(() => calculateCuttingTimeFromFile('drawing.svg', {
+      materialThickness: 3, machineProfile: 'talvi-6000w-raytools'
+    })).toThrow(/Talvi/);
+  });
 });

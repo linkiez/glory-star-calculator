@@ -1,6 +1,13 @@
 export type { Point, Movement, CuttingTimeOptions, CuttingTimeResult } from './models/index';
 export type { ProcessedSVGElement } from './formats/svg/ProcessedSVGElement';
 export type { TechnologySelection } from './technology/TechnologySelection';
+export type { MachineProfileId } from './technology/profiles/MachineProfileId';
+export type { MachineProfile } from './technology/profiles/MachineProfile';
+export { MACHINE_PROFILES } from './technology/profiles/machineProfiles';
+export { getMachineProfile } from './technology/profiles/getMachineProfile';
+export type { HprCarbonSteelRecipe } from './technology/profiles/HprCarbonSteelRecipe';
+export { getHprCarbonSteelRecipe } from './technology/profiles/getHprCarbonSteelRecipe';
+export { HPR_CARBON_STEEL_RECIPES } from './technology/profiles/hprCarbonSteelRecipes';
 export { SVGElementType } from './formats/svg/SVGElementType';
 export * from './technology/reference/index';
 export { getLaserTechnologyOptions } from './technology/getLaserTechnologyOptions';

@@ -1,10 +1,7 @@
 import type { CuttingTimeOptions } from '../models/CuttingTimeOptions';
-import { CUTTING_SPEEDS } from '../technology/reference/cuttingSpeeds';
-import { PIERCE_TIMES } from '../technology/reference/pierceTimes';
-import { RAPID_SPEED } from '../technology/reference/rapidSpeed';
-import { SETUP_TIME } from '../technology/reference/setupTime';
-import { getCuttingSpeed } from '../technology/reference/getCuttingSpeed';
-import { getPierceTime } from '../technology/reference/getPierceTime';
+import type { MachineProfile } from '../technology/profiles/MachineProfile';
+import { getMachineProfile } from '../technology/profiles/getMachineProfile';
+import { interpolateParameter } from '../technology/reference/interpolateParameter';
 
 /** Validated parameters ready for geometric and temporal calculation. */
 interface CuttingParameters {
@@ -15,6 +12,7 @@ interface CuttingParameters {
   setup: number;
   leadLength: number;
   acceleration: number | undefined;
+  referenceMotion: MachineProfile['referenceMotion'];
 }
 
 function validateValue(value: number, name: string, positive = false): number {
@@ -31,26 +29,36 @@ function validateValue(value: number, name: string, positive = false): number {
  * @throws Error for invalid inputs or missing recipe data outside the reference range.
  */
 export function resolveCuttingParameters(options: CuttingTimeOptions): CuttingParameters {
-  validateValue(options.materialThickness, 'Espessura', true);
-  for (const [override, table] of [[options.cuttingSpeed, CUTTING_SPEEDS], [options.pierceTime, PIERCE_TIMES]] as const) {
-    const thicknesses = Object.keys(table).map(Number);
-    if (override === undefined && (options.materialThickness < Math.min(...thicknesses) ||
-        options.materialThickness > Math.max(...thicknesses))) {
-      throw new Error('Espessura fora da tabela de referência; informe velocidade e perfuração da receita');
-    }
+  const profile = getMachineProfile(options.machineProfile);
+  function required(value: number | undefined, name: string, positive = false): number {
+    if (value === undefined) throw new Error(`${profile.name}: informe ${name}`);
+    return validateValue(value, name, positive);
   }
+  function recipe(override: number | undefined, table: Readonly<Record<number, number>> | undefined,
+    name: string, positive = false): number {
+    if (override !== undefined) return required(override, name, positive);
+    if (!table) return required(undefined, name, positive);
+    const thicknesses = Object.keys(table).map(Number);
+    if (options.materialThickness < Math.min(...thicknesses) ||
+        options.materialThickness > Math.max(...thicknesses)) {
+      throw new Error(`${profile.name}: espessura fora da tabela de referência; informe ${name} da receita`);
+    }
+    return required(interpolateParameter(table, options.materialThickness, profile.exactThicknessOnly), name, positive);
+  }
+  validateValue(options.materialThickness, 'Espessura', true);
   const scale = validateValue(options.scaleFactor ?? 1, 'Escala', true);
-  const feed = validateValue(options.cuttingSpeed ?? getCuttingSpeed(options.materialThickness), 'Velocidade de corte', true);
-  const pierceTime = validateValue(options.pierceTime ?? getPierceTime(options.materialThickness), 'Tempo de perfuração');
-  const rapid = validateValue(options.rapidSpeed ?? RAPID_SPEED, 'Velocidade de posicionamento', true);
-  const setup = validateValue(options.setupTimeSec ?? SETUP_TIME, 'Tempo de setup');
+  const feed = recipe(options.cuttingSpeed, profile.cuttingSpeeds, 'Velocidade de corte', true);
+  const pierceTime = recipe(options.pierceTime, profile.pierceTimes, 'Tempo de perfuração');
+  const rapid = required(options.rapidSpeed ?? profile.rapidSpeed, 'Velocidade de posicionamento', true);
+  const setup = required(options.setupTimeSec ?? profile.setupTimeSec, 'Tempo de setup');
   const leadLength = validateValue(options.leadIn ?? 0, 'Entrada') + validateValue(options.leadOut ?? 0, 'Saída');
   validateValue(options.kerf ?? 0, 'Kerf');
-  const acceleration = options.accelerationMmPerSec2;
+  const acceleration = options.accelerationMmPerSec2 ?? profile.accelerationMmPerSec2;
+  if (!profile.referenceMotion && acceleration === undefined) required(undefined, 'Aceleração', true);
   if (acceleration !== undefined) validateValue(acceleration, 'Aceleração', true);
   if (options.piercingType && !['normal', 'flying'].includes(options.piercingType)) throw new Error('Tipo de perfuração inválido');
   if (options.piercingType === 'flying' && options.pierceTime === undefined) {
     throw new Error('Perfuração flying exige o tempo de perfuração da máquina');
   }
-  return { scale, feed, pierceTime, rapid, setup, leadLength, acceleration };
+  return { scale, feed, pierceTime, rapid, setup, leadLength, acceleration, referenceMotion: profile.referenceMotion };
 }

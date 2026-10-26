@@ -9,9 +9,12 @@ Validar, aplicar escala, ordenar contornos opcionalmente e somar os tempos.
 ## Fluxo principal
 Resolve parâmetros → seleciona Strategy temporal → escala → otimiza contornos
 opcionalmente → corte/deslocamento → perfuração → setup único.
+`machineProfile` acompanha todas as entradas; omissão preserva Glory Star.
 ## Erros e casos-limite
 Rejeita NaN, infinito, parâmetros negativos e espessura sem receita fora da tabela.
 Vazio e cortes de comprimento zero não geram perfuração nem setup.
+Talvi sem parâmetros explícitos gera erro inclusive para geometria vazia;
+não usa overhead, receitas nem movimento da Glory Star.
 ## Exemplos
 `calculateCuttingTime(moves, { materialThickness: 3, cuttingSpeed: 3400, pierceTime: 0.03 })`.
 ## Dependências e integrações
