@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.1.0 (2026-10-26)
+
+* docs(talvi): listar parâmetros para o operador ([8682f49](https://github.com/linkiez/glory-star-calculator/commit/8682f49))
+* feat(technology): adicionar perfis e receitas de máquinas ([fa7ea38](https://github.com/linkiez/glory-star-calculator/commit/fa7ea38))
+
 ## 2.0.0 (2026-10-24)
 
 * fix(calculo): corrigir geometria e estimativa do tempo de corte ([377e9a8](https://github.com/linkiez/glory-star-calculator/commit/377e9a8))
