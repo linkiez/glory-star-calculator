@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.0 (2026-10-28)
+
+* docs: documentar perfis e receitas Talvi no readme ([0734680](https://github.com/linkiez/glory-star-calculator/commit/0734680))
+* feat(talvi): importar receitas de aço carbono do HSTool ([ecabf42](https://github.com/linkiez/glory-star-calculator/commit/ecabf42))
+
 ## 2.1.0 (2026-10-26)
 
 * docs(talvi): listar parâmetros para o operador ([8682f49](https://github.com/linkiez/glory-star-calculator/commit/8682f49))
