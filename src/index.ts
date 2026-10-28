@@ -11,6 +11,12 @@ export { HPR_CARBON_STEEL_RECIPES } from './technology/profiles/hprCarbonSteelRe
 export { SVGElementType } from './formats/svg/SVGElementType';
 export * from './technology/reference/index';
 export { getLaserTechnologyOptions } from './technology/getLaserTechnologyOptions';
+export type { TalviCarbonSteelRecipe } from './technology/profiles/TalviCarbonSteelRecipe';
+export type { TalviPierceStage } from './technology/profiles/TalviPierceStage';
+export type { TalviTechnologySelection } from './technology/TalviTechnologySelection';
+export type { TalviTechnologyOptions } from './technology/TalviTechnologyOptions';
+export { TALVI_CARBON_STEEL_RECIPES } from './technology/profiles/talviCarbonSteelRecipes';
+export { getTalviTechnologyOptions } from './technology/getTalviTechnologyOptions';
 export { calculateCuttingTime } from './calculation/calculateCuttingTime';
 export { calculateCuttingTimeFromDxf } from './formats/dxf/calculateCuttingTimeFromDxf';
 export { calculateCuttingTimeFromSvg } from './formats/svg/calculateCuttingTimeFromSvg';
